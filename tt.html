@@ -468,7 +468,43 @@
     .report-header { padding-bottom: 16px !important; }
     .report, .report-header, .summary-grid, .report-section, .finance-grid, .report-notes, .report-footer { break-inside: avoid !important; page-break-inside: avoid !important; }
   }
+
+  /* Attendance Sub-tabs & Reports */
+  .att-subnav { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 10px; flex-wrap: wrap; }
+  .att-subbtn { padding: 8px 14px; background: #e2e8f0; border: none; border-radius: 6px; font-weight: 700; font-size: 12px; color: #334155; cursor: pointer; transition: all 0.2s; }
+  .att-subbtn.active { background: var(--green); color: white; }
+  .att-subbtn:hover:not(.active) { background: #cbd5e1; }
+
+  .att-card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+  .att-card h3 { margin-top: 0; margin-bottom: 12px; font-size: 13px; text-transform: uppercase; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; }
+
+  /* Monthly Attendance Matrix Table */
+  .att-matrix-wrap { overflow-x: auto; max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; }
+  .att-matrix-table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; }
+  .att-matrix-table th, .att-matrix-table td { padding: 8px 10px; border: 1px solid #e2e8f0; text-align: center; }
+  .att-matrix-table th { background: #f8fafc; color: #475569; font-weight: 800; font-size: 10px; text-transform: uppercase; }
+  .att-matrix-table td.staff-col { text-align: left; font-weight: 700; color: #0f172a; position: sticky; left: 0; background: #fff; z-index: 2; border-right: 2px solid #cbd5e1; }
+  .att-matrix-table th.staff-col { position: sticky; left: 0; background: #f8fafc; z-index: 3; border-right: 2px solid #cbd5e1; }
+
+  .status-tag { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; }
+  .status-tag.present { background: #d1fae5; color: #065f46; }
+  .status-tag.absent { background: #fee2e2; color: #991b1b; }
+  .status-tag.late { background: #fef3c7; color: #92400e; }
+  .status-tag.half { background: #e0e7ff; color: #3730a3; }
+  .status-tag.off { background: #f1f5f9; color: #64748b; }
+
+  /* Password Modal Overlay */
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal-box { background: white; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); text-align: center; }
+  .modal-box h3 { margin-top: 0; color: #991b1b; font-size: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .modal-box p { color: #475569; font-size: 13px; line-height: 1.5; margin: 12px 0 16px; }
+  .modal-box input { width: 100%; text-align: center; letter-spacing: 4px; font-size: 20px; font-weight: 800; padding: 10px; border: 2px solid #cbd5e1; border-radius: 8px; margin-bottom: 16px; }
+  .modal-box input:focus { border-color: #ef3340; outline: none; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -550,7 +586,7 @@
                 <div class="hint">Logo stored locally in browser for offline reuse.</div>
               </div>
               <div class="field"><label for="reportDate">Report Date</label><input id="reportDate" type="date" /></div>
-              <div class="field"><label for="preparedBy">Prepared By</label><input id="preparedBy" value="Dr. Ahmed Mabrouk" placeholder="Staff name" /></div>
+              <div class="field"><label for="preparedBy">Prepared By</label><input id="preparedBy" value="DR. AHMED MABROUK" placeholder="Staff name" /></div>
             </div>
           </div>
 
@@ -777,40 +813,179 @@
     </section>
   </div>
 
-  <!-- TAB 3: STAFF & ATTENDANCE -->
+    <!-- TAB 3: STAFF & ATTENDANCE -->
   <div class="tab-view" id="tabViewStaff">
-    <section class="panel">
-      <div class="panel-head"><h2>Staff Roster & Attendance Workspace</h2><span>Staff Directory</span></div>
-      <div class="form-body">
-        <label class="mode-toggle">
-          <input id="showStaffNames" type="checkbox" checked />
-          <span>
-            <strong>Show Staff Roster on Live Report & Export</strong>
-            <small>When checked, individual staff attendance is displayed in the main report document.</small>
-          </span>
-        </label>
-        <div class="staff-table-wrap">
-          <table class="staff-input-table">
-            <thead>
-              <tr>
-                <th style="width:5%">#</th>
-                <th style="width:35%">Staff Name</th>
-                <th style="width:30%">Role / Title</th>
-                <th style="width:20%">Attendance</th>
-                <th style="width:10%">Action</th>
-              </tr>
-            </thead>
-            <tbody id="staffRosterBody"></tbody>
-          </table>
+    <!-- Sub-Navigation for Staff Section -->
+    <div class="att-subnav">
+      <button class="att-subbtn active" type="button" id="subtabRosterBtn" data-att-view="viewStaffRoster">👔 Staff Directory & Roster</button>
+      <button class="att-subbtn" type="button" id="subtabCheckinBtn" data-att-view="viewDailyCheckin">⏱️ Daily Check-In / Check-Out</button>
+      <button class="att-subbtn" type="button" id="subtabMonthlyBtn" data-att-view="viewMonthlyAttendance">📅 Monthly Attendance & Absences</button>
+      <button class="att-subbtn" type="button" id="subtabReportsBtn" data-att-view="viewAttendanceReports">📊 Staff Attendance Reports (.xlsx)</button>
+    </div>
+
+    <!-- VIEW 1: STAFF ROSTER -->
+    <div id="viewStaffRoster" class="att-view-panel">
+      <section class="panel">
+        <div class="panel-head"><h2>Staff Directory & Roster Workspace</h2><span>Staff Roster</span></div>
+        <div class="form-body">
+          <label class="mode-toggle">
+            <input id="showStaffNames" type="checkbox" checked />
+            <span>
+              <strong>Show Staff Roster on Live Report & Export</strong>
+              <small>When checked, individual staff attendance is displayed in the main report document.</small>
+            </span>
+          </label>
+          <div class="staff-table-wrap">
+            <table class="staff-input-table">
+              <thead>
+                <tr>
+                  <th style="width:5%">#</th>
+                  <th style="width:35%">Staff Name (UPPERCASE)</th>
+                  <th style="width:30%">Role / Title</th>
+                  <th style="width:20%">Today's Status</th>
+                  <th style="width:10%">Action</th>
+                </tr>
+              </thead>
+              <tbody id="staffRosterBody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px">
+            <button class="btn btn-success" id="addStaffBtn" type="button">+ Add Staff Member</button>
+            <div class="staff-totals" id="staffTotals">Present: 0 · Absent: 0 · Off Duty: 0 · Total: 0</div>
+          </div>
+          <input id="staffPresent" type="hidden" value="0" />
+          <input id="staffAbsent" type="hidden" value="0" />
         </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:10px">
-          <button class="btn btn-success" id="addStaffBtn" type="button">+ Add Staff Member</button>
-          <div class="staff-totals" id="staffTotals">Present: 0 · Absent: 0 · Off Duty: 0 · Total: 0</div>
+      </section>
+    </div>
+
+    <!-- VIEW 2: DAILY CHECK-IN / CHECK-OUT -->
+    <div id="viewDailyCheckin" class="att-view-panel" style="display:none">
+      <section class="panel">
+        <div class="panel-head"><h2>Daily Check-In & Check-Out Entry</h2><span>Time & Hours Tracker</span></div>
+        <div class="form-body">
+          <p class="hint">Log daily check-in, check-out, working hours, lateness, and attendance status for employees. Existing records for the selected date are updated automatically to prevent duplicate entries.</p>
+
+          <div class="field-grid" style="margin-bottom:14px">
+            <div class="field">
+              <label for="attLogDate">Attendance Date</label>
+              <input id="attLogDate" type="date" />
+            </div>
+            <div class="field">
+              <label for="attLogStaff">Select Staff Member</label>
+              <select id="attLogStaff"></select>
+            </div>
+            <div class="field">
+              <label for="attLogStatus">Attendance Status</label>
+              <select id="attLogStatus">
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
+                <option value="Late">Late</option>
+                <option value="Half Day">Half Day</option>
+                <option value="Off Duty">Off Duty</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="attCheckIn">Check-In Time</label>
+              <input id="attCheckIn" type="time" value="08:00" />
+            </div>
+            <div class="field">
+              <label for="attCheckOut">Check-Out Time</label>
+              <input id="attCheckOut" type="time" value="16:00" />
+            </div>
+            <div class="field">
+              <label for="attLateness">Lateness (Minutes)</label>
+              <input id="attLateness" type="number" min="0" value="0" />
+            </div>
+            <div class="field full">
+              <label for="attNotes">Notes / Remarks</label>
+              <input id="attNotes" type="text" placeholder="e.g. Approved leave, traffic delay, morning shift" />
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-success" id="saveAttRecordBtn" type="button">💾 Save Attendance Record</button>
+            <span id="attRecordStatus" class="hint" style="margin-top:0">Select date & staff to log or correct record.</span>
+          </div>
+
+          <div style="margin-top:20px">
+            <div class="section-title">Attendance Logs for Selected Date</div>
+            <div class="staff-table-wrap" style="margin-top:8px">
+              <table class="staff-input-table">
+                <thead>
+                  <tr>
+                    <th>Staff Name</th>
+                    <th>Status</th>
+                    <th>Check-In</th>
+                    <th>Check-Out</th>
+                    <th>Hours Worked</th>
+                    <th>Lateness</th>
+                    <th>Notes</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="attDailyLogBody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-        <input id="staffPresent" type="hidden" value="0" />
-        <input id="staffAbsent" type="hidden" value="0" />
-      </div>
-    </section>
+      </section>
+    </div>
+
+    <!-- VIEW 3: MONTHLY ATTENDANCE MATRIX -->
+    <div id="viewMonthlyAttendance" class="att-view-panel" style="display:none">
+      <section class="panel">
+        <div class="panel-head"><h2>Monthly Attendance & Absence Overview</h2><span>Monthly Sheet</span></div>
+        <div class="form-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+            <div class="field-grid" style="grid-template-columns:auto auto;align-items:center;gap:10px">
+              <label for="attMonthSelect" style="font-weight:700">Select Month:</label>
+              <input id="attMonthSelect" type="month" style="padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;" />
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn" id="exportMonthlyXlsxBtn" type="button">📥 Export Monthly Excel (.xlsx)</button>
+            </div>
+          </div>
+
+          <div class="att-matrix-wrap">
+            <table class="att-matrix-table">
+              <thead id="attMatrixHead"></thead>
+              <tbody id="attMatrixBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- VIEW 4: ATTENDANCE REPORTS & EXPORTS -->
+    <div id="viewAttendanceReports" class="att-view-panel" style="display:none">
+      <section class="panel">
+        <div class="panel-head"><h2>Staff Attendance & Absence Reports</h2><span>Excel (.xlsx) Downloads</span></div>
+        <div class="form-body">
+          <div class="att-card">
+            <h3>🏢 Monthly Operations Attendance Report (.xlsx)</h3>
+            <p class="hint" style="margin-bottom:12px">Generates a complete multi-tab Microsoft Excel spreadsheet (.xlsx) containing monthly totals, working hours, lateness summary, absence records, and a day-by-day attendance matrix for all staff members.</p>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <label for="reportMonthSelect">Month:</label>
+              <input id="reportMonthSelect" type="month" style="padding:7px;border-radius:6px;border:1px solid #cbd5e1;" />
+              <button class="btn btn-success" id="downloadMonthlyReportXlsxBtn" type="button">📊 Download Full Monthly Excel Report (.xlsx)</button>
+            </div>
+          </div>
+
+          <div class="att-card">
+            <h3>👤 Individual Staff Monthly Attendance Card (.xlsx)</h3>
+            <p class="hint" style="margin-bottom:12px">Generates an individual monthly attendance card and detailed daily log sheet (.xlsx) for a single staff member, including check-in/out timestamps, hours worked, late minutes, absence days, and total working hours.</p>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <label for="reportStaffSelect">Staff Member:</label>
+              <select id="reportStaffSelect" style="padding:7px;border-radius:6px;border:1px solid #cbd5e1;min-width:200px;"></select>
+              <label for="reportStaffMonthSelect">Month:</label>
+              <input id="reportStaffMonthSelect" type="month" style="padding:7px;border-radius:6px;border:1px solid #cbd5e1;" />
+              <button class="btn primary" id="downloadIndividualReportXlsxBtn" type="button" style="background:#1e293b;color:#fff;">📄 Download Individual Staff Excel (.xlsx)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
   <!-- TAB 4: WHATSAPP SUMMARY -->
@@ -851,6 +1026,19 @@
 
 </main>
 
+<!-- SYSTEM RESET PASSWORD MODAL -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box">
+    <h3>⚠️ CONFIRM FULL SYSTEM RESET</h3>
+    <p>Resetting will <strong>permanently delete all player registrations, staff records, attendance logs, custom sections, and saved drafts</strong>.<br><br>It is strongly recommended to <strong>download a backup</strong> before proceeding.<br><br>Enter the 4-digit system password to confirm deletion:</p>
+    <input type="password" id="resetPasswordInput" placeholder="••••" maxlength="4" autocomplete="off" />
+    <div class="modal-actions">
+      <button class="btn" type="button" id="cancelResetBtn" style="background:#f1f5f9;color:#334155;border-color:#cbd5e1;">Cancel</button>
+      <button class="btn btn-danger" type="button" id="confirmResetBtn">Delete All Data</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -875,23 +1063,24 @@
   let toastTimer = null;
 
   const DEFAULT_STAFF = [
-    {name:'Ahmed Mabrouk',role:'Admin',attendance:'Present'},
-    {name:'Dina Lotfy',role:'Admin',attendance:'Present'},
-    {name:'El-Saeed Mohamed',role:'Head Coach',attendance:'Present'},
-    {name:'Ali Mohamed',role:'Swimming Coach',attendance:'Present'},
-    {name:'Mohamed Hatem',role:'Swimming Coach',attendance:'Present'},
-    {name:'Hana',role:'Swimming Coach',attendance:'Present'},
-    {name:'Sidra',role:'Swimming Coach',attendance:'Present'},
-    {name:'Marwa',role:'Swimming Coach',attendance:'Present'},
-    {name:'Esraa',role:'Swimming Coach',attendance:'Present'},
-    {name:'Mouslia',role:'Lifeguard',attendance:'Present'},
-    {name:'Yasmina',role:'Cleaner',attendance:'Present'},
-    {name:'Sench',role:'Swimming Coach',attendance:'Present'}
+    {name:'AHMED MABROUK',role:'Admin',attendance:'Present'},
+    {name:'DINA LOTFY',role:'Admin',attendance:'Present'},
+    {name:'EL-SAEED MOHAMED',role:'Head Coach',attendance:'Present'},
+    {name:'ALI MOHAMED',role:'Swimming Coach',attendance:'Present'},
+    {name:'MOHAMED HATEM',role:'Swimming Coach',attendance:'Present'},
+    {name:'HANA',role:'Swimming Coach',attendance:'Present'},
+    {name:'SIDRA',role:'Swimming Coach',attendance:'Present'},
+    {name:'MARWA',role:'Swimming Coach',attendance:'Present'},
+    {name:'ESRAA',role:'Swimming Coach',attendance:'Present'},
+    {name:'MOUSLIA',role:'Lifeguard',attendance:'Present'},
+    {name:'YASMINA',role:'Cleaner',attendance:'Present'},
+    {name:'SENCH',role:'Swimming Coach',attendance:'Present'}
   ];
 
   let staffRoster = [];
   let players = [];
   let customSections = [];
+  let monthlyAttendance = [];
   let showStaffNames = true;
 
   // --- INDEXEDDB HELPER FOR OFFLINE PERSISTENCE ---
@@ -936,7 +1125,8 @@
   }
 
   function notify(message, error=false){
-    const el=$('toast'); el.textContent=message;
+    const el=$('toast'); if(!el) return;
+    el.textContent=message;
     el.classList.toggle('error', error); el.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer=setTimeout(()=>el.classList.remove('show'), 4000);
@@ -960,6 +1150,11 @@
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
 
+  function localMonthStamp(){
+    const d=new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+  }
+
   function dateDisplay(value){
     if(!value) return '—';
     const d = new Date(value + 'T12:00:00');
@@ -968,6 +1163,7 @@
 
   function showLogo(){
     const preview=$('logoPreview'), mark=$('reportLogoMark'), footerMark=$('footerLogoMark');
+    if(!preview || !mark) return;
     preview.replaceChildren(); mark.replaceChildren(); if(footerMark) footerMark.replaceChildren();
     if(logoData){
       const pimg=new Image(); pimg.alt='Academy logo'; pimg.src=logoData; preview.appendChild(pimg);
@@ -1018,19 +1214,26 @@
 
   function snapshot(){
     const data = {
-      version: 6,
+      version: 7,
       exportedAt: new Date().toISOString(),
       logoData: logoData,
-      staffRoster: staffRoster,
+      staffRoster: staffRoster.map(s => ({ ...s, name: (s.name||'').toUpperCase() })),
       players: players,
       customSections: customSections,
+      monthlyAttendance: monthlyAttendance.map(a => ({ ...a, staffName: (a.staffName||'').toUpperCase() })),
       showStaffNames: showStaffNames,
       usePlayerTotals: !!$('usePlayerTotals')?.checked,
       fields: {}
     };
     ids.forEach(id => {
       const el = $(id);
-      if (el) data.fields[id] = el.value;
+      if (el) {
+        if (id === 'preparedBy') {
+          data.fields[id] = el.value.toUpperCase();
+        } else {
+          data.fields[id] = el.value;
+        }
+      }
     });
     return data;
   }
@@ -1072,6 +1275,21 @@
         tab.classList.add('active');
         const target = tab.dataset.tab;
         if($(target)) $(target).classList.add('active');
+      });
+    });
+
+    // Attendance subnav
+    const subBtns = document.querySelectorAll('.att-subbtn');
+    subBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        subBtns.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.att-view-panel').forEach(p => p.style.display = 'none');
+        btn.classList.add('active');
+        const viewId = btn.dataset.attView;
+        if($(viewId)) $(viewId).style.display = 'block';
+        if(viewId === 'viewMonthlyAttendance') renderMonthlyMatrix();
+        if(viewId === 'viewAttendanceReports') populateReportStaffDropdown();
+        if(viewId === 'viewDailyCheckin') renderDailyCheckinLog();
       });
     });
   }
@@ -1160,15 +1378,16 @@
     });
   }
 
-  // --- RENDER STAFF ROSTER ---
+  // --- RENDER STAFF ROSTER & UPPERCASE ENFORCEMENT ---
   function renderStaffRoster(){
     const body = $('staffRosterBody');
     if(!body) return;
     body.replaceChildren();
     staffRoster.forEach((person, index) => {
+      person.name = (person.name || '').toUpperCase();
       const tr = document.createElement('tr');
       tr.innerHTML = '<td>' + (index + 1) + '</td>' +
-        '<td><input aria-label="Staff name" data-staff-field="name" data-index="' + index + '"></td>' +
+        '<td><input aria-label="Staff name" data-staff-field="name" data-index="' + index + '" style="text-transform:uppercase;"></td>' +
         '<td><input aria-label="Job title" data-staff-field="role" data-index="' + index + '"></td>' +
         '<td><select aria-label="Attendance" data-staff-field="attendance" data-index="' + index + '"><option>Present</option><option>Absent</option><option>Off Duty</option></select></td>' +
         '<td><button type="button" class="staff-remove" data-remove-staff="' + index + '">Remove</button></td>';
@@ -1181,18 +1400,26 @@
     body.querySelectorAll('[data-staff-field]').forEach(el => {
       el.addEventListener('input', () => {
         const i = Number(el.dataset.index), field = el.dataset.staffField;
-        staffRoster[i][field] = el.value;
-        calculateStaffCounts(); renderStaffReport(); update(); scheduleSave();
+        if (field === 'name') {
+          const start = el.selectionStart, end = el.selectionEnd;
+          el.value = el.value.toUpperCase();
+          el.setSelectionRange(start, end);
+          staffRoster[i].name = el.value;
+        } else {
+          staffRoster[i][field] = el.value;
+        }
+        calculateStaffCounts(); renderStaffReport(); update(); populateStaffSelects(); scheduleSave();
       });
     });
 
     body.querySelectorAll('[data-remove-staff]').forEach(el => {
       el.addEventListener('click', () => {
         staffRoster.splice(Number(el.dataset.removeStaff), 1);
-        renderStaffRoster(); update(); scheduleSave();
+        renderStaffRoster(); update(); populateStaffSelects(); scheduleSave();
       });
     });
     calculateStaffCounts();
+    populateStaffSelects();
     updateBadges();
   }
 
@@ -1219,13 +1446,336 @@
     listed.forEach(person => {
       const tr = document.createElement('tr');
       const statusClass = person.attendance === 'Present' ? 'staff-present' : person.attendance === 'Absent' ? 'staff-absent' : '';
-      [person.name, person.role, person.attendance].forEach((value, i) => {
+      [(person.name || '').toUpperCase(), person.role, person.attendance].forEach((value, i) => {
         const td = document.createElement('td'); td.textContent = value || '—';
         if(i === 2) td.className = statusClass;
         tr.appendChild(td);
       });
       body.appendChild(tr);
     });
+  }
+
+  function populateStaffSelects() {
+    ['attLogStaff', 'reportStaffSelect'].forEach(id => {
+      const select = $(id);
+      if(!select) return;
+      const currentVal = select.value;
+      select.replaceChildren();
+      if(id === 'attLogStaff') {
+        const opt = document.createElement('option'); opt.value = ''; opt.textContent = '-- Select Staff Member --'; select.appendChild(opt);
+      }
+      staffRoster.forEach(s => {
+        if(s.name.trim()){
+          const opt = document.createElement('option');
+          opt.value = s.name.toUpperCase();
+          opt.textContent = s.name.toUpperCase() + (s.role ? ' (' + s.role + ')' : '');
+          select.appendChild(opt);
+        }
+      });
+      if(currentVal) select.value = currentVal;
+    });
+  }
+
+  function populateReportStaffDropdown() {
+    populateStaffSelects();
+  }
+
+  // --- DAILY CHECK-IN / CHECK-OUT ATTENDANCE LOGIC ---
+  function calculateHours(checkIn, checkOut) {
+    if(!checkIn || !checkOut) return 0;
+    const [inH, inM] = checkIn.split(':').map(Number);
+    const [outH, outM] = checkOut.split(':').map(Number);
+    let diff = (outH * 60 + outM) - (inH * 60 + inM);
+    if(diff < 0) diff += 24 * 60;
+    return Math.max(0, Number((diff / 60).toFixed(2)));
+  }
+
+  function saveAttendanceRecord() {
+    const date = $('attLogDate')?.value;
+    const staffName = $('attLogStaff')?.value;
+    const status = $('attLogStatus')?.value || 'Present';
+    const checkIn = $('attCheckIn')?.value || '';
+    const checkOut = $('attCheckOut')?.value || '';
+    const lateness = Math.max(0, Number($('attLateness')?.value)||0);
+    const notes = $('attNotes')?.value.trim() || '';
+
+    if(!date) { notify('Please select a valid attendance date.', true); return; }
+    if(!staffName) { notify('Please select a staff member.', true); return; }
+
+    const hours = ['Present', 'Late', 'Half Day'].includes(status) ? calculateHours(checkIn, checkOut) : 0;
+    const uName = staffName.toUpperCase();
+
+    const existingIdx = monthlyAttendance.findIndex(a => a.date === date && a.staffName.toUpperCase() === uName);
+    const rec = { date, staffName: uName, status, checkIn, checkOut, hours, lateness, notes };
+
+    if(existingIdx >= 0) {
+      monthlyAttendance[existingIdx] = rec;
+      notify('Attendance record updated for ' + uName + ' on ' + date);
+    } else {
+      monthlyAttendance.push(rec);
+      notify('Attendance record saved for ' + uName + ' on ' + date);
+    }
+
+    if(date === ($('reportDate')?.value || localDateStamp())) {
+      const rosterIdx = staffRoster.findIndex(s => s.name.toUpperCase() === uName);
+      if(rosterIdx >= 0) {
+        staffRoster[rosterIdx].attendance = ['Absent', 'Off Duty'].includes(status) ? status : 'Present';
+        renderStaffRoster();
+      }
+    }
+
+    renderDailyCheckinLog();
+    renderMonthlyMatrix();
+    update();
+    scheduleSave();
+  }
+
+  function renderDailyCheckinLog() {
+    const body = $('attDailyLogBody');
+    if(!body) return;
+    body.replaceChildren();
+    const selectedDate = $('attLogDate')?.value || localDateStamp();
+    const dayRecords = monthlyAttendance.filter(a => a.date === selectedDate);
+
+    if(!dayRecords.length) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="8" class="empty" style="text-align:center;padding:12px;">No check-in/out records logged for ' + dateDisplay(selectedDate) + '</td>';
+      body.appendChild(tr);
+      return;
+    }
+
+    dayRecords.forEach(rec => {
+      const tr = document.createElement('tr');
+      const statusTagClass = rec.status === 'Present' ? 'present' : rec.status === 'Absent' ? 'absent' : rec.status === 'Late' ? 'late' : rec.status === 'Half Day' ? 'half' : 'off';
+      tr.innerHTML =
+        '<td><strong>' + rec.staffName + '</strong></td>' +
+        '<td><span class="status-tag ' + statusTagClass + '">' + rec.status + '</span></td>' +
+        '<td>' + (rec.checkIn || '—') + '</td>' +
+        '<td>' + (rec.checkOut || '—') + '</td>' +
+        '<td>' + rec.hours + ' hrs</td>' +
+        '<td>' + (rec.lateness > 0 ? rec.lateness + ' mins' : '0') + '</td>' +
+        '<td>' + (rec.notes || '—') + '</td>' +
+        '<td><button type="button" class="staff-remove" data-del-att="' + rec.date + '_' + rec.staffName + '">Delete</button></td>';
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll('[data-del-att]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.delAtt;
+        monthlyAttendance = monthlyAttendance.filter(a => (a.date + '_' + a.staffName) !== key);
+        renderDailyCheckinLog(); renderMonthlyMatrix(); update(); scheduleSave();
+        notify('Attendance record removed.');
+      });
+    });
+  }
+
+  // --- RENDER MONTHLY ATTENDANCE MATRIX ---
+  function renderMonthlyMatrix() {
+    const head = $('attMatrixHead');
+    const body = $('attMatrixBody');
+    if(!head || !body) return;
+
+    head.replaceChildren(); body.replaceChildren();
+
+    const monthStr = $('attMonthSelect')?.value || localMonthStamp();
+    const [year, month] = monthStr.split('-').map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const headTr = document.createElement('tr');
+    let headHtml = '<th class="staff-col">STAFF MEMBER</th>';
+    for(let d = 1; d <= daysInMonth; d++) {
+      headHtml += '<th>' + d + '</th>';
+    }
+    headHtml += '<th>PRES</th><th>ABS</th><th>LATE</th><th>TOTAL HRS</th>';
+    headTr.innerHTML = headHtml;
+    head.appendChild(headTr);
+
+    if(!staffRoster.length) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td colspan="' + (daysInMonth + 5) + '" class="empty" style="text-align:center;padding:16px;">No staff members in directory</td>';
+      body.appendChild(tr);
+      return;
+    }
+
+    staffRoster.forEach(staff => {
+      const sName = (staff.name || '').toUpperCase();
+      if(!sName) return;
+      const tr = document.createElement('tr');
+      let rowHtml = '<td class="staff-col">' + sName + '</td>';
+
+      let pCount = 0, aCount = 0, lCount = 0, totalHours = 0;
+
+      for(let d = 1; d <= daysInMonth; d++) {
+        const dayStr = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        const rec = monthlyAttendance.find(a => a.date === dayStr && a.staffName.toUpperCase() === sName);
+
+        if(rec) {
+          if(rec.status === 'Present') pCount++;
+          else if(rec.status === 'Absent') aCount++;
+          else if(rec.status === 'Late') { pCount++; lCount++; }
+          else if(rec.status === 'Half Day') pCount += 0.5;
+
+          totalHours += rec.hours || 0;
+
+          const letter = rec.status === 'Present' ? 'P' : rec.status === 'Absent' ? 'A' : rec.status === 'Late' ? 'L' : rec.status === 'Half Day' ? 'H' : 'OFF';
+          const tagClass = rec.status === 'Present' ? 'present' : rec.status === 'Absent' ? 'absent' : rec.status === 'Late' ? 'late' : rec.status === 'Half Day' ? 'half' : 'off';
+          rowHtml += '<td><span class="status-tag ' + tagClass + '" title="' + dayStr + ': ' + rec.status + ' (' + rec.hours + ' hrs)">' + letter + '</span></td>';
+        } else {
+          rowHtml += '<td style="color:#cbd5e1;">-</td>';
+        }
+      }
+
+      rowHtml += '<td style="font-weight:700;color:#065f46;">' + pCount + '</td>' +
+                 '<td style="font-weight:700;color:#991b1b;">' + aCount + '</td>' +
+                 '<td style="font-weight:700;color:#92400e;">' + lCount + '</td>' +
+                 '<td style="font-weight:800;color:#0f172a;">' + totalHours.toFixed(1) + '</td>';
+      tr.innerHTML = rowHtml;
+      body.appendChild(tr);
+    });
+  }
+
+  // --- EXCEL (.XLSX) ATTENDANCE REPORT GENERATORS ---
+  function downloadMonthlyAttendanceXlsx() {
+    if (typeof XLSX === 'undefined') {
+      notify('SheetJS Excel library not loaded. Please check network connection.', true);
+      return;
+    }
+    const monthStr = $('reportMonthSelect')?.value || $('attMonthSelect')?.value || localMonthStamp();
+    const [year, month] = monthStr.split('-').map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const monthName = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+    const wb = XLSX.utils.book_new();
+
+    const summaryData = [
+      ['ABTAL SPORTS ACADEMY - MONTHLY STAFF ATTENDANCE SUMMARY'],
+      ['MONTH:', monthName.toUpperCase(), 'BRANCH:', ($('academy')?.value || 'MUWEILAH').toUpperCase()],
+      [],
+      ['S#', 'STAFF NAME', 'ROLE', 'DAYS PRESENT', 'DAYS ABSENT', 'LATE COUNT', 'TOTAL WORKING HOURS', 'TOTAL LATE (MINS)']
+    ];
+
+    staffRoster.forEach((s, idx) => {
+      const uName = s.name.toUpperCase();
+      const monthRecs = monthlyAttendance.filter(a => a.staffName.toUpperCase() === uName && a.date.startsWith(monthStr));
+      let pCount = 0, aCount = 0, lCount = 0, totalHours = 0, totalLateMins = 0;
+
+      monthRecs.forEach(r => {
+        if (r.status === 'Present') pCount++;
+        else if (r.status === 'Absent') aCount++;
+        else if (r.status === 'Late') { pCount++; lCount++; }
+        else if (r.status === 'Half Day') pCount += 0.5;
+
+        totalHours += r.hours || 0;
+        totalLateMins += r.lateness || 0;
+      });
+
+      summaryData.push([idx + 1, uName, s.role || 'Staff', pCount, aCount, lCount, totalHours, totalLateMins]);
+    });
+
+    const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, wsSummary, 'Attendance Summary');
+
+    const matrixHeader = ['STAFF NAME', 'ROLE'];
+    for(let d = 1; d <= daysInMonth; d++) matrixHeader.push(d.toString());
+    matrixHeader.push('PRES', 'ABS', 'LATE', 'HOURS');
+
+    const matrixData = [
+      ['ABTAL SPORTS ACADEMY - DAILY ATTENDANCE MATRIX (' + monthName.toUpperCase() + ')'],
+      [],
+      matrixHeader
+    ];
+
+    staffRoster.forEach(s => {
+      const uName = s.name.toUpperCase();
+      const row = [uName, s.role || 'Staff'];
+      let pCount = 0, aCount = 0, lCount = 0, totalHours = 0;
+
+      for(let d = 1; d <= daysInMonth; d++) {
+        const dayStr = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+        const rec = monthlyAttendance.find(a => a.date === dayStr && a.staffName.toUpperCase() === uName);
+        if(rec) {
+          row.push(rec.status.toUpperCase());
+          if (rec.status === 'Present') pCount++;
+          else if (rec.status === 'Absent') aCount++;
+          else if (rec.status === 'Late') { pCount++; lCount++; }
+          else if (rec.status === 'Half Day') pCount += 0.5;
+          totalHours += rec.hours || 0;
+        } else {
+          row.push('-');
+        }
+      }
+      row.push(pCount, aCount, lCount, totalHours);
+      matrixData.push(row);
+    });
+
+    const wsMatrix = XLSX.utils.aoa_to_sheet(matrixData);
+    XLSX.utils.book_append_sheet(wb, wsMatrix, 'Daily Matrix');
+
+    XLSX.writeFile(wb, 'Staff_Monthly_Attendance_' + monthStr + '.xlsx');
+    notify('Monthly Attendance Excel (.xlsx) generated successfully.');
+  }
+
+  function downloadIndividualAttendanceXlsx() {
+    if (typeof XLSX === 'undefined') {
+      notify('SheetJS Excel library not loaded. Please check network connection.', true);
+      return;
+    }
+    const staffName = $('reportStaffSelect')?.value;
+    if (!staffName) {
+      notify('Please select a staff member.', true);
+      return;
+    }
+
+    const monthStr = $('reportStaffMonthSelect')?.value || localMonthStamp();
+    const [year, month] = monthStr.split('-').map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const monthName = new Date(year, month - 1, 1).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+    const uName = staffName.toUpperCase();
+    const staffObj = staffRoster.find(s => s.name.toUpperCase() === uName) || { name: uName, role: 'Staff' };
+
+    const wb = XLSX.utils.book_new();
+    const cardData = [
+      ['ABTAL SPORTS ACADEMY - INDIVIDUAL STAFF ATTENDANCE CARD'],
+      ['STAFF NAME:', uName, 'ROLE:', staffObj.role || 'Staff'],
+      ['MONTH:', monthName.toUpperCase(), 'BRANCH:', ($('academy')?.value || 'MUWEILAH').toUpperCase()],
+      [],
+      ['DATE', 'DAY OF WEEK', 'STATUS', 'CHECK-IN', 'CHECK-OUT', 'HOURS WORKED', 'LATENESS (MINS)', 'NOTES']
+    ];
+
+    let pCount = 0, aCount = 0, lCount = 0, totalHours = 0, totalLateMins = 0;
+
+    for(let d = 1; d <= daysInMonth; d++) {
+      const dayStr = year + '-' + String(month).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      const dateObj = new Date(year, month - 1, d);
+      const dayOfWeek = dateObj.toLocaleString('en-US', { weekday: 'short' });
+      const rec = monthlyAttendance.find(a => a.date === dayStr && a.staffName.toUpperCase() === uName);
+
+      if(rec) {
+        if (rec.status === 'Present') pCount++;
+        else if (rec.status === 'Absent') aCount++;
+        else if (rec.status === 'Late') { pCount++; lCount++; }
+        else if (rec.status === 'Half Day') pCount += 0.5;
+
+        totalHours += rec.hours || 0;
+        totalLateMins += rec.lateness || 0;
+
+        cardData.push([dayStr, dayOfWeek, rec.status, rec.checkIn || '—', rec.checkOut || '—', rec.hours, rec.lateness, rec.notes || '']);
+      } else {
+        cardData.push([dayStr, dayOfWeek, 'OFF / UNRECORDED', '—', '—', 0, 0, '']);
+      }
+    }
+
+    cardData.push([]);
+    cardData.push(['MONTHLY TOTALS']);
+    cardData.push(['DAYS PRESENT:', pCount, 'DAYS ABSENT:', aCount, 'LATE TIMES:', lCount, 'TOTAL HOURS:', totalHours, 'TOTAL LATE MINS:', totalLateMins]);
+
+    const wsCard = XLSX.utils.aoa_to_sheet(cardData);
+    XLSX.utils.book_append_sheet(wb, wsCard, 'Attendance Card');
+
+    const cleanName = uName.replace(/[^A-Z0-9]/gi, '_');
+    XLSX.writeFile(wb, 'Staff_Attendance_' + cleanName + '_' + monthStr + '.xlsx');
+    notify('Individual Attendance Excel (.xlsx) generated for ' + uName);
   }
 
   // --- DYNAMIC CUSTOM SECTIONS BUILDER & RENDERER ---
@@ -1511,7 +2061,12 @@
 
     set('rAcademyEyebrow', ($('academy')?.value.trim()||'MUWEILAH BRANCH').toUpperCase());
     set('rDate', dateDisplay($('reportDate')?.value));
-    set('rPrepared', 'Prepared by: ' + ($('preparedBy')?.value.trim()||'Dr. Ahmed Mabrouk'));
+
+    const prepVal = ($('preparedBy')?.value || 'DR. AHMED MABROUK').toUpperCase();
+    if($('preparedBy') && $('preparedBy').value !== prepVal) {
+      $('preparedBy').value = prepVal;
+    }
+    set('rPrepared', 'Prepared by: ' + prepVal);
 
     set('mCollections', money(grand));
     set('mItems', integer(itemsQty));
@@ -1572,7 +2127,7 @@
 
       if(Array.isArray(data.staffRoster)) {
         staffRoster = data.staffRoster.map(x => ({
-          name: String(x.name||''), role: String(x.role||''),
+          name: String(x.name||'').toUpperCase(), role: String(x.role||''),
           attendance: ['Present','Absent','Off Duty'].includes(x.attendance) ? x.attendance : 'Present'
         }));
       }
@@ -1581,8 +2136,21 @@
         customSections = data.customSections;
       }
 
+      if(Array.isArray(data.monthlyAttendance)) {
+        monthlyAttendance = data.monthlyAttendance.map(a => ({
+          ...a,
+          staffName: String(a.staffName||'').toUpperCase()
+        }));
+      }
+
       ids.forEach(id => {
-        if(Object.prototype.hasOwnProperty.call(data.fields, id) && $(id)) $(id).value = data.fields[id];
+        if(Object.prototype.hasOwnProperty.call(data.fields, id) && $(id)) {
+          if (id === 'preparedBy') {
+            $(id).value = String(data.fields[id]||'').toUpperCase();
+          } else {
+            $(id).value = data.fields[id];
+          }
+        }
       });
 
       logoData = typeof data.logoData === 'string' ? data.logoData : '';
@@ -1590,8 +2158,14 @@
     } else {
       if($('academy')) $('academy').value = 'Muweilah Branch';
       if($('reportDate')) $('reportDate').value = localDateStamp();
+      if($('preparedBy')) $('preparedBy').value = 'DR. AHMED MABROUK';
       staffRoster = DEFAULT_STAFF.map(x => ({...x}));
     }
+
+    if($('attLogDate')) $('attLogDate').value = localDateStamp();
+    if($('attMonthSelect')) $('attMonthSelect').value = localMonthStamp();
+    if($('reportMonthSelect')) $('reportMonthSelect').value = localMonthStamp();
+    if($('reportStaffMonthSelect')) $('reportStaffMonthSelect').value = localMonthStamp();
 
     showLogo();
     renderPlayers();
@@ -1660,13 +2234,80 @@
     notify('Excel report downloaded successfully.');
   }
 
+  // --- PASSWORD PROTECTED RESET SYSTEM (PASSWORD: 2026) ---
+  function showResetModal() {
+    const modal = $('resetModal');
+    const pwdInput = $('resetPasswordInput');
+    if(pwdInput) pwdInput.value = '';
+    if(modal) modal.classList.add('show');
+    if(pwdInput) pwdInput.focus();
+  }
+
+  function hideResetModal() {
+    const modal = $('resetModal');
+    if(modal) modal.classList.remove('show');
+  }
+
+  async function executeSystemReset() {
+    const pwdInput = $('resetPasswordInput');
+    const pwd = pwdInput ? pwdInput.value.trim() : '';
+
+    if(pwd !== '2026') {
+      notify('Incorrect password! System reset cancelled.', true);
+      hideResetModal();
+      return;
+    }
+
+    hideResetModal();
+
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+    try {
+      const db = await openDB();
+      const tx = db.transaction(INDEXEDDB_STORE, 'readwrite');
+      tx.objectStore(INDEXEDDB_STORE).clear();
+    } catch(e){}
+
+    logoData = '';
+    players = [];
+    customSections = [];
+    monthlyAttendance = [];
+    staffRoster = DEFAULT_STAFF.map(x=>({...x}));
+
+    if($('academy')) $('academy').value = 'Muweilah Branch';
+    if($('reportDate')) $('reportDate').value = localDateStamp();
+    if($('preparedBy')) $('preparedBy').value = 'DR. AHMED MABROUK';
+
+    ids.forEach(id => {
+      if($(id) && id !== 'academy' && id !== 'reportDate' && id !== 'preparedBy') $(id).value = 0;
+    });
+    if($('notes')) $('notes').value = '';
+
+    showLogo();
+    renderPlayers();
+    renderStaffRoster();
+    renderCustomSectionsBuilder();
+    renderDailyCheckinLog();
+    renderMonthlyMatrix();
+    update();
+    saveNow();
+
+    notify('System reset completed successfully. All data purged.');
+  }
+
   // --- INITIALIZATION & EVENT LISTENERS ---
   setupTabs();
 
   ids.forEach(id => {
     const el = $(id);
     if(el) {
-      el.addEventListener('input', persistAndRender);
+      el.addEventListener('input', () => {
+        if (id === 'preparedBy') {
+          const start = el.selectionStart, end = el.selectionEnd;
+          el.value = el.value.toUpperCase();
+          el.setSelectionRange(start, end);
+        }
+        persistAndRender();
+      });
       el.addEventListener('change', persistAndRender);
     }
   });
@@ -1721,42 +2362,62 @@
       if(!confirm('Import backup? Existing report data will be replaced.')) return;
 
       ids.forEach(id => {
-        if(Object.prototype.hasOwnProperty.call(data.fields, id) && $(id)) $(id).value = data.fields[id];
+        if(Object.prototype.hasOwnProperty.call(data.fields, id) && $(id)) {
+          if (id === 'preparedBy') {
+            $(id).value = String(data.fields[id]||'').toUpperCase();
+          } else {
+            $(id).value = data.fields[id];
+          }
+        }
       });
       if(typeof data.logoData === 'string') logoData = data.logoData;
       if(typeof data.usePlayerTotals === 'boolean' && $('usePlayerTotals')) $('usePlayerTotals').checked = data.usePlayerTotals;
       if(Array.isArray(data.players)) players = data.players;
-      if(Array.isArray(data.staffRoster)) staffRoster = data.staffRoster;
+      if(Array.isArray(data.staffRoster)) {
+        staffRoster = data.staffRoster.map(s => ({
+          ...s,
+          name: (s.name || '').toUpperCase()
+        }));
+      }
       if(Array.isArray(data.customSections)) customSections = data.customSections;
+      if(Array.isArray(data.monthlyAttendance)) {
+        monthlyAttendance = data.monthlyAttendance.map(a => ({
+          ...a,
+          staffName: (a.staffName || '').toUpperCase()
+        }));
+      }
 
-      showLogo(); renderPlayers(); renderStaffRoster(); renderCustomSectionsBuilder(); syncTotalsMode(); update(); saveNow();
+      showLogo(); renderPlayers(); renderStaffRoster(); renderCustomSectionsBuilder(); syncTotalsMode(); renderDailyCheckinLog(); renderMonthlyMatrix(); update(); saveNow();
       notify('Backup imported successfully.');
     } catch(err) {
       notify('Could not import backup file: ' + err.message, true);
     } finally { this.value = ''; }
   });
 
-  if($('resetBtn')) $('resetBtn').addEventListener('click', () => {
-    if(!confirm('Reset all report inputs and clear saved data?')) return;
-    try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
-    logoData = ''; players = []; customSections = []; staffRoster = DEFAULT_STAFF.map(x=>({...x}));
-    if($('academy')) $('academy').value = 'Muweilah Branch';
-    if($('reportDate')) $('reportDate').value = localDateStamp();
-    ids.forEach(id => { if($(id) && id !== 'academy' && id !== 'reportDate' && id !== 'preparedBy') $(id).value = 0; });
-    if($('notes')) $('notes').value = '';
-    showLogo(); renderPlayers(); renderStaffRoster(); renderCustomSectionsBuilder(); update(); saveNow();
-    notify('Report inputs reset.');
+  if($('resetBtn')) $('resetBtn').addEventListener('click', showResetModal);
+  if($('cancelResetBtn')) $('cancelResetBtn').addEventListener('click', hideResetModal);
+  if($('confirmResetBtn')) $('confirmResetBtn').addEventListener('click', executeSystemReset);
+  if($('resetPasswordInput')) $('resetPasswordInput').addEventListener('keydown', e => {
+    if(e.key === 'Enter') executeSystemReset();
   });
 
   if($('addPlayerBtn')) $('addPlayerBtn').addEventListener('click', addPlayer);
   if($('addStaffBtn')) $('addStaffBtn').addEventListener('click', () => {
     staffRoster.push({name:'', role:'', attendance:'Present'});
-    renderStaffRoster(); update(); scheduleSave();
+    renderStaffRoster(); update(); populateStaffSelects(); scheduleSave();
   });
   if($('addCustomSectionBtn')) $('addCustomSectionBtn').addEventListener('click', () => {
     customSections.push({ title: 'New Custom Section', items: [{ title: '', qty: 1, price: 0 }] });
     renderCustomSectionsBuilder(); update(); scheduleSave();
   });
+
+  if($('saveAttRecordBtn')) $('saveAttRecordBtn').addEventListener('click', saveAttendanceRecord);
+  if($('attMonthSelect')) $('attMonthSelect').addEventListener('change', renderMonthlyMatrix);
+  if($('attLogDate')) $('attLogDate').addEventListener('change', renderDailyCheckinLog);
+
+  if($('exportMonthlyXlsxBtn')) $('exportMonthlyXlsxBtn').addEventListener('click', downloadMonthlyAttendanceXlsx);
+  if($('downloadMonthlyReportXlsxBtn')) $('downloadMonthlyReportXlsxBtn').addEventListener('click', downloadMonthlyAttendanceXlsx);
+  if($('downloadIndividualReportXlsxBtn')) $('downloadIndividualReportXlsxBtn').addEventListener('click', downloadIndividualAttendanceXlsx);
 
   if($('showStaffNames')) $('showStaffNames').addEventListener('change', function(){ showStaffNames = this.checked; update(); scheduleSave(); });
 
